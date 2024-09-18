@@ -3,10 +3,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"net"
 	"time"
 
-	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -83,7 +83,8 @@ func (c *registryURLObservation) sync(ctx context.Context, key string) error {
 	for _, location := range serviceLocations {
 		urls = append(urls, urlsForInternalRegistryService(c.services, location)...)
 	}
-	slices.Sort(urls)
+	dedupe := sets.NewString(urls...)
+	urls = dedupe.List()
 	select {
 	case c.ch <- urls:
 	case <-ctx.Done():
